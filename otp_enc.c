@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   struct hostent *server;         // Pointer to host struct type.
 
   char buffer[256];       // Buffer to read data into.
+  char message[1000];     // Message to send to server.
 
   // Connection Set Up
   if(argc < 3) {
@@ -72,8 +73,12 @@ int main(int argc, char *argv[]) {
   // Connection successful, communicate.
   bzero(buffer, 256);
   printf("Enter message: ");
-  fgets(buffer, 255, stdin);
-  n = write(newsockfd, buffer, strlen(buffer));      // Write to server.
+  fgets(buffer, 255, stdin);       // Read message into buffer.
+  strcpy(&message[1], buffer);      // starting at index 1. index 0 is a checksum value.
+  message[0] = (int)strlen(buffer); // Get string length of the buffer so server knows how much text to expect.
+  printf("Message to send: %s %d %d", message, message[0], (int)strlen(message));  // Debugging message to send.
+
+  n = write(newsockfd, message, strlen(message));      // Write message to server.
 
   if(n < 0)
     error("ERROR writing to socket!");

@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   int pid;                  // PID of child processes.
 
   socklen_t clilen;         // Size of clients address, required by 'accept()'.
-  char buffer[256];         // Data buffer to read incoming messages into.
+  char buffer[1000];         // Data buffer to read incoming messages into.
 
   struct sockaddr_in serv_addr;         // Address of the server (here).
   struct sockaddr_in cli_addr;          // Address of the client (who connects).
@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
   // Check user passed in a port to set socket up on.
   if(argc < 2) {
     fprintf(stderr, "ERROR, no port provided\n");
+    fflush(stderr);
     exit(1);
   }
 
@@ -101,8 +102,9 @@ int main(int argc, char *argv[]) {
       if(newchildsockfd < 0)
         error("ERROR accepting connection from client");
 
-      n = read(newchildsockfd, buffer, 255);
-      printf("From client %s", buffer);
+      n = read(newchildsockfd, buffer, 999);
+      printf("From client %s, msg len: %d", buffer, buffer[0]);
+      fflush(stdout);
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
       exit(0);
