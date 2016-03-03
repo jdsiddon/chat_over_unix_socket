@@ -26,6 +26,8 @@ int main(int argc, char *argv[]) {
   int n;                    // Integer to hold number of characters read or write returns.
   int status;               // Status variable to communicate child process status.
 
+  int portCounter = 0;     // Integer to increment port number by as clients connect.
+
   // Begin socket setup.
 
   // Check user passed in a port to set socket up on.
@@ -57,6 +59,8 @@ int main(int argc, char *argv[]) {
   while(1) {                    // Loop forever waiting for connections.
     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);         // Accept connection, make new socket for connection.
 
+    portCounter = portCounter + 1;  // Increment port increase variable, so they can communicate on new port #.
+
     if(newsockfd < 0)           // If newsockfd is less than 0, the accept call failed.
       error("ERROR on accept");
 
@@ -67,10 +71,23 @@ int main(int argc, char *argv[]) {
 
     if(pid == 0) {              // CHILD
       close(sockfd);            // Close the old socket.
+      char childPort[50];        // Character array to hold port number child should talk on.
+
+      sprintf(childPort, "%d", (portno + portCounter));   // Convert port integer to string and store it in childPort.
+
+      // Set up new port to talk on, port is 5 characters.
+      write(newsockfd, childPort, 5);
+
+      // Close connection with client on 'master' port.
+
+      // Restart connection with client on new port.
+
+
       // INSERT CALL TO CRYPT FUNCTION HERE.
       exit(0);
     } else {                    // PARENT
-      wait(&status);
+      waitpid(0, &status, WNOHANG);
+
       printf("Child exit: %d\n", WEXITSTATUS(status));
       fflush(stdout);
       close(newsockfd);
