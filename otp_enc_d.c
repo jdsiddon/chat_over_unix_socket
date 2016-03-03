@@ -72,16 +72,37 @@ int main(int argc, char *argv[]) {
     if(pid == 0) {              // CHILD
       close(sockfd);            // Close the old socket.
       char childPort[50];        // Character array to hold port number child should talk on.
+      int childsockfd;          // New socket.
+      int newchildsockfd;       // New communication between child process and client. Sock bound to new port.
+
+      childsockfd = socket(AF_INET, SOCK_STREAM, 0);     // Socket uses unix domain, stream type socket, with TCP protocol.
 
       sprintf(childPort, "%d", (portno + portCounter));   // Convert port integer to string and store it in childPort.
 
       // Set up new port to talk on, port is 5 characters.
       write(newsockfd, childPort, 5);
 
-      // Close connection with client on 'master' port.
+      // Copy old serv address to new one.
+      struct sockaddr_in child_serv_addr;         // Address of the server (here).
 
-      // Restart connection with client on new port.
+      // Copy over master server address information to child.
+      memcpy(&child_serv_addr, &serv_addr, sizeof(serv_addr));
 
+      // Set port number of child.
+      child_serv_addr.sin_port = htons((portno + portCounter));           // Set new port number.
+
+      // Bind socket to child server address.
+      if(bind(childsockfd, (struct sockaddr *) &child_serv_addr, sizeof(child_serv_addr)) < 0)
+        error("ERROR binding");
+
+      listen(childsockfd, 5);            // Listen on socket for connections.
+
+      newchildsockfd = accept(childsockfd, (struct sockaddr *) &cli_addr, &clilen);         // Accept connection, make new socket for connection.
+      if(newchildsockfd < 0)
+        error("ERROR accepting connection from client");
+
+      n = read(newchildsockfd, buffer, 255);
+      printf("From client %s", buffer);
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
       exit(0);

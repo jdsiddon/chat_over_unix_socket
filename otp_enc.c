@@ -13,6 +13,7 @@ void error(const char *msg);
 
 int main(int argc, char *argv[]) {
   int sockfd;             // Socket file descriptor.
+  int newsockfd;          // Socket to use for new connection to server on port assigned by server.
   int portno;             // Master port number, port communication begins on.
 
   int n;                  // Integer to record how many characters were read/write to server.
@@ -55,7 +56,29 @@ int main(int argc, char *argv[]) {
   bzero(buffer, 256);
   n = read(sockfd, buffer, 255);
   printf("%s", buffer);
-  close(sockfd);
+  close(sockfd);      // Close old connection.
+
+  // Create new socket for communication.
+  newsockfd = socket(AF_INET, SOCK_STREAM, 0);     // Set up socket, unix domain, stream type, TCP connection.
+
+  // Start new connection on new port.
+  portno = atoi(buffer);         // Convert new port number to integer.
+  serv_addr.sin_port = htons(portno);     // Set server port on serv_addr struct.
+
+  // Reconnect to server on new port.
+  if(connect(newsockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+    error("ERROR connecting on new port");
+
+  // Connection successful, communicate.
+  bzero(buffer, 256);
+  printf("Enter message: ");
+  fgets(buffer, 255, stdin);
+  n = write(newsockfd, buffer, strlen(buffer));      // Write to server.
+
+  if(n < 0)
+    error("ERROR writing to socket!");
+
+
   return 0;
 
 }
