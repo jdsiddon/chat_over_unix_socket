@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   if(sockfd < 0)           // If socket = -1, wasn't successful.
     error("ERROR opening socket");
 
-  server = gethostbyname(argv[1]);      // Gets information about server, in this case its localhost.
+  server = gethostbyname("localhost");      // Gets information about server, in this case its localhost.
   if(server == NULL) {
     fprintf(stderr, "ERROR no such host\n");
     exit(0);
@@ -70,15 +70,40 @@ int main(int argc, char *argv[]) {
   if(connect(newsockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
     error("ERROR connecting on new port");
 
+
   // Connection successful, communicate.
   bzero(buffer, 256);
-  printf("Enter message: ");
-  fgets(buffer, 255, stdin);       // Read message into buffer.
-  strcpy(&message[1], buffer);      // starting at index 1. index 0 is a checksum value.
-  message[0] = (int)strlen(buffer); // Get string length of the buffer so server knows how much text to expect.
-  printf("Message to send: %s %d %d", message, message[0], (int)strlen(message));  // Debugging message to send.
 
-  n = write(newsockfd, message, strlen(message));      // Write message to server.
+  // Open plain text file.
+  FILE *plaintext;
+  plaintext = fopen(argv[1], "r");
+
+  // First send total file length to the server so it knows how many characters to wait for.
+  fseek(plaintext, 0L, SEEK_END);
+  int totalSize = ftell(plaintext);                   // Get total length.
+
+  fseek(plaintext, 0L, SEEK_SET);                     // Reset location pointer in file to beginning.
+
+  message[0] = totalSize;                             // Insert length into message with no body.
+  n = write(newsockfd, message, strlen(message));     // Send total lenght to server.
+
+  n = read(newsockfd, message, strlen(message));
+  if(message[0] != totalSize)                         // Total size of message sent to server doesn't match total size of message to send.
+    error("ERROR server responding with incorrect message length");
+
+  char *noNewLine;
+  // Send plaintext file to server.
+  while(fgets(buffer, 255, plaintext) != NULL) {      // Read lines from plaintext file into buffer.
+
+    noNewLine = strtok(buffer, "\n");                 // Strip off newline character.
+
+    strcpy(&message[1], noNewLine);                   // starting at index 1. index 0 is a checksum value.
+    message[0] = (int)strlen(buffer);                 // Get string length of the buffer so server knows how much text to expect.
+    printf("Message to send: %s", &message[1]);        // Debugging message to send.
+    printf("Message len: %d", (int)strlen(message));
+    n = write(newsockfd, message, strlen(message));   // Write message to server.
+    bzero(message, 1000);                             // Reset message to 0.
+  }
 
   if(n < 0)
     error("ERROR writing to socket!");

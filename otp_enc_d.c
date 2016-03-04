@@ -102,9 +102,31 @@ int main(int argc, char *argv[]) {
       if(newchildsockfd < 0)
         error("ERROR accepting connection from client");
 
+      // First message read is to figure out the total message length that is coming in. (all of the streams).
       n = read(newchildsockfd, buffer, 999);
-      printf("From client %s, msg len: %d", buffer, buffer[0]);
+      printf("Total Message Length: %d", buffer[0]);
       fflush(stdout);
+      if(n < 0)
+        error("ERROR Reading from client");
+
+      int totalMessLen = buffer[0];
+      char *entireMessage = (char*) malloc(totalMessLen + 1);                   // Create space to store entire message.
+
+      // Write back to client confiration, informs to send rest of data.
+      printf("\n%d\n", totalMessLen);
+      n = write(newchildsockfd, buffer, strlen(buffer));   // Write message to client.
+
+      char buff[20];
+      // Get all text from client.
+      while(totalMessLen > 0) {
+        n = read(newchildsockfd, buffer, 999);             // n will always be +1 to the actual string length since buff[0] is length of character string.
+        printf("n: %d\n", n);
+        printf("Message: %s\n", &buffer[1]);
+        strcpy(buff, &buffer[1]);
+        printf("buff: %s", buff);
+        totalMessLen = totalMessLen - n;
+      }
+
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
       exit(0);
