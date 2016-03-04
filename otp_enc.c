@@ -79,30 +79,43 @@ int main(int argc, char *argv[]) {
   plaintext = fopen(argv[1], "r");
 
   // First send total file length to the server so it knows how many characters to wait for.
-  fseek(plaintext, 0L, SEEK_END);
-  int totalSize = ftell(plaintext);                   // Get total length.
+  // fseek(plaintext, 0L, SEEK_END);
+  char *noNewLine;
+  int totalSize; //= ftell(plaintext);                   // Get total length.
+  while(fgets(buffer, 255, plaintext) != NULL) {
+    noNewLine = strtok(buffer, "\n");
+    totalSize = totalSize + strlen(noNewLine);
+  }
+
+  totalSize = htonl(totalSize);   // COnvert to netbyte order.
 
   fseek(plaintext, 0L, SEEK_SET);                     // Reset location pointer in file to beginning.
 
-  message[0] = totalSize;                             // Insert length into message with no body.
-  n = write(newsockfd, message, strlen(message));     // Send total lenght to server.
+  // Send total file size to server.
+  n = write(newsockfd, (char*)&totalSize, sizeof(totalSize));     // Send total lenght to server.
+  if(n < 0) error("ERROR sending total message size");
 
-  n = read(newsockfd, message, strlen(message));
-  if(message[0] != totalSize)                         // Total size of message sent to server doesn't match total size of message to send.
-    error("ERROR server responding with incorrect message length");
 
-  char *noNewLine;
+  int completeRec = 0;
   // Send plaintext file to server.
+  int msgLen = 0;
+  bzero(buffer, 256);
   while(fgets(buffer, 255, plaintext) != NULL) {      // Read lines from plaintext file into buffer.
 
     noNewLine = strtok(buffer, "\n");                 // Strip off newline character.
 
-    strcpy(&message[1], noNewLine);                   // starting at index 1. index 0 is a checksum value.
-    message[0] = (int)strlen(buffer);                 // Get string length of the buffer so server knows how much text to expect.
-    printf("Message to send: %s", &message[1]);        // Debugging message to send.
-    printf("Message len: %d", (int)strlen(message));
-    n = write(newsockfd, message, strlen(message));   // Write message to server.
+    strcpy(message, noNewLine);                   // starting at index 1. index 0 is a checksum value.
+    msgLen = (int)strlen(message);                 // Get string length of the buffer so server knows how much text to expect.
+    int tmp = htonl(msgLen);// convert to network byte order.
+    printf("tmp: %d\n", ntohl(tmp));        // Debugging message to send.
+    //printf("Message len: %d", (int)strlen(message));
+    n = write(newsockfd, (char*)&tmp, sizeof(tmp));   // Write message to server.
+    if(n < 0) error("ERROR sending length");
+
+    n = write(newsockfd, message, msgLen);
+    if(n < 0) error("ERROR sedngin message");
     bzero(message, 1000);                             // Reset message to 0.
+    bzero(buffer, 256);
   }
 
   if(n < 0)

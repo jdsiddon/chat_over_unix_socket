@@ -103,29 +103,39 @@ int main(int argc, char *argv[]) {
         error("ERROR accepting connection from client");
 
       // First message read is to figure out the total message length that is coming in. (all of the streams).
-      n = read(newchildsockfd, buffer, 999);
-      printf("Total Message Length: %d", buffer[0]);
-      fflush(stdout);
-      if(n < 0)
-        error("ERROR Reading from client");
+      int totalMessLen;       // Hold total message length.
 
-      int totalMessLen = buffer[0];
-      char *entireMessage = (char*) malloc(totalMessLen + 1);                   // Create space to store entire message.
+      n = read(newchildsockfd, (char*)&totalMessLen, sizeof(totalMessLen));     // Read total message length.
+      totalMessLen = ntohl(totalMessLen);                                       // Convert to int from netbyte order.
+      printf("Total Message Length: %d\n", totalMessLen);
+      if(n < 0) error("ERROR Reading total message length from client");
 
-      // Write back to client confiration, informs to send rest of data.
-      printf("\n%d\n", totalMessLen);
-      n = write(newchildsockfd, buffer, strlen(buffer));   // Write message to client.
+      char *entireMessage = (char*) malloc(totalMessLen + 1);                   // Create space to store entire message. (+1 to end with newline).
 
-      char buff[20];
+      int bufLen;
+      int currPos = 0;
       // Get all text from client.
       while(totalMessLen > 0) {
-        n = read(newchildsockfd, buffer, 999);             // n will always be +1 to the actual string length since buff[0] is length of character string.
-        printf("n: %d\n", n);
-        printf("Message: %s\n", &buffer[1]);
-        strcpy(buff, &buffer[1]);
-        printf("buff: %s", buff);
-        totalMessLen = totalMessLen - n;
+        // First lets get the total message length that is going to be sent next.
+        n = read(newchildsockfd, (char*)&bufLen, sizeof(bufLen));             // n will always be +1 to the actual string length since buff[0] is length of character string.
+        if(n < 0) error("ERROR reading length");
+
+        bufLen = ntohl(bufLen);           // Convert sent bufLen to normal int.
+        printf("bufLen: %d\n", bufLen);
+
+        // Read actual message.
+        n = read(newchildsockfd, buffer, bufLen);
+        if(n < 0) error("ERROR reading message");
+
+        printf("Buffer: %s\n", buffer);
+        strcpy(&entireMessage[currPos], buffer);
+        currPos = currPos + bufLen;
+        totalMessLen = totalMessLen - bufLen;
+        printf("Remaining: %d\n", totalMessLen);
+        bzero(buffer, 1000);            // Reset buffer to 0.
       }
+
+      printf("%s\n", entireMessage);
 
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
