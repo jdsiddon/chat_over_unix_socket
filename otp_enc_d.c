@@ -8,8 +8,9 @@
 #include <sys/socket.h>       // Required for sockets to work.
 #include <netinet/in.h>       // Required for internet domain access.
 
-void error(const char *msg);  // Error function prototype.
-char* receiveMessage(int newchildsockfd);   // Get messages from client, function prototype.
+#include "error.c"
+#include "transmission.c"
+
 char* encrypt(char *plaintext, char *key);
 
 // Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
   // Create new socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);     // Socket uses unix domain, stream type socket, with TCP protocol.
   if(sockfd < 0)                                // -1 means socket created errored out.
-    error("ERROR opening socket");
+    error("ERROR opening socket", 1);
 
   bzero((char *) &serv_addr, sizeof(serv_addr));  // Set serv_addr struct to all 0's.
 
@@ -55,7 +56,7 @@ int main(int argc, char *argv[]) {
 
   // Bind socket to server address.
   if(bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-    error("ERROR binding");
+    error("ERROR binding", 1);
 
   listen(sockfd, 5);            // Listen on socket for connections.
 
@@ -65,12 +66,12 @@ int main(int argc, char *argv[]) {
     portCounter = portCounter + 1;  // Increment port increase variable, so they can communicate on new port #.
 
     if(newsockfd < 0)           // If newsockfd is less than 0, the accept call failed.
-      error("ERROR on accept");
+      error("ERROR on accept", 1);
 
     // Connection was successful so fork a new process.
     pid = fork();
     if(pid < 0)
-      error("ERROR forking process");
+      error("ERROR forking process", 1);
 
     if(pid == 0) {              // CHILD
       close(sockfd);            // Close the old socket.
@@ -96,13 +97,13 @@ int main(int argc, char *argv[]) {
 
       // Bind socket to child server address.
       if(bind(childsockfd, (struct sockaddr *) &child_serv_addr, sizeof(child_serv_addr)) < 0)
-        error("ERROR binding");
+        error("ERROR binding", 1);
 
       listen(childsockfd, 5);            // Listen on socket for connections.
 
       newchildsockfd = accept(childsockfd, (struct sockaddr *) &cli_addr, &clilen);         // Accept connection, make new socket for connection.
       if(newchildsockfd < 0)
-        error("ERROR accepting connection from client");
+        error("ERROR accepting connection from client", 1);
 
 
 
@@ -115,6 +116,9 @@ int main(int argc, char *argv[]) {
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
       char* cipher = encrypt(plaintext, key);
+
+      // Send cipher text back to client.
+      sendText(cipher, newchildsockfd);
 
 
 
@@ -162,51 +166,4 @@ char* encrypt(char *plaintext, char *key) {
   }
   //printf("cipher: %s", cipher);
   return cipher;
-}
-
-
-char* receiveMessage(int newchildsockfd) {
-  // First message read is to figure out the total message length that is coming in. (all of the streams).
-  int totalMessLen;       // Hold total message length.
-  int n;
-  char buffer[1000];
-
-
-  n = read(newchildsockfd, (char*)&totalMessLen, sizeof(totalMessLen));     // Read total file length.
-  totalMessLen = ntohl(totalMessLen);                                       // Convert to int from netbyte order.
-
-  printf("Total Message Length: %d\n", totalMessLen);
-  if(n < 0) error("ERROR Reading total message length from client");
-
-  char *entireMessage = (char*) malloc(totalMessLen);                   // Create space to store entire message. (+1 to end with newline).
-
-  int bufLen = 0;
-  int currPos = 0;
-
-  // Get all text from client.
-  while(totalMessLen > 0) {
-
-    n = read(newchildsockfd, (char*)&bufLen, sizeof(bufLen));       // First lets get the total message length that is going to be sent next.
-    if(n < 0) error("ERROR reading length");
-
-    bufLen = ntohl(bufLen);                     // Convert sent bufLen to normal int. (type cast happens automatically)
-
-    // Read actual message.
-    n = read(newchildsockfd, buffer, bufLen);
-    if(n < 0) error("ERROR reading message");
-
-    strcpy(&entireMessage[currPos], buffer);
-    currPos = currPos + bufLen;
-    totalMessLen = totalMessLen - bufLen;
-    bzero(buffer, 1000);                        // Reset buffer to 0.
-  }
-
-  return entireMessage;
-}
-
-
-// Returns the passed message to stderr.
-void error(const char *msg) {
-  perror(msg);
-  exit(1);
 }
