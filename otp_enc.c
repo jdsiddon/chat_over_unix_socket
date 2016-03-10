@@ -26,8 +26,7 @@ int main(int argc, char *argv[]) {
 
   // Connection Set Up
   if(argc < 4) {
-    fprintf(stderr, "usage: plaintext, key, port\n");       // Print error if user didn't pass address and port when starting.
-    exit(0);
+    error("usage: plaintext, key, port\n", 1);
   }
 
   portno = atoi(argv[3]);  // Convert passed port number to integer.
@@ -87,7 +86,6 @@ int main(int argc, char *argv[]) {
 
   if(n < 0)
     error("ERROR writing to socket!", 1);
-
 
   return 0;
 

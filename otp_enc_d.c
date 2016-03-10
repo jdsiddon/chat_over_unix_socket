@@ -108,10 +108,10 @@ int main(int argc, char *argv[]) {
 
 
       char* plaintext = receiveMessage(newchildsockfd);
-      printf("Back in main: %s\n", plaintext);
+      //printf("Back in main: %s\n", plaintext);
 
       char* key = receiveMessage(newchildsockfd);
-      printf("key: %s\n", key);
+      //printf("key: %s\n", key);
 
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
