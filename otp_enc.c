@@ -10,6 +10,7 @@
 
 
 void error(const char *msg);
+void sendText(char *file, int newsockfd);
 
 int main(int argc, char *argv[]) {
   int sockfd;             // Socket file descriptor.
@@ -25,12 +26,12 @@ int main(int argc, char *argv[]) {
   char message[1000];     // Message to send to server.
 
   // Connection Set Up
-  if(argc < 3) {
-    fprintf(stderr, "usage %s hostname port\n", argv[0]);       // Print error if user didn't pass address and port when starting.
+  if(argc < 4) {
+    fprintf(stderr, "usage: plaintext, key, port\n");       // Print error if user didn't pass address and port when starting.
     exit(0);
   }
 
-  portno = atoi(argv[2]);  // Convert passed port number to integer.
+  portno = atoi(argv[3]);  // Convert passed port number to integer.
 
   sockfd = socket(AF_INET, SOCK_STREAM, 0);     // Set up socket, unix domain, stream type, TCP connection.
   if(sockfd < 0)           // If socket = -1, wasn't successful.
@@ -74,20 +75,38 @@ int main(int argc, char *argv[]) {
   // Connection successful, communicate.
   bzero(buffer, 256);
 
+  // Send plain text data to server.
+  sendText(argv[1], newsockfd);           // Send plain text file contents.
+  sendText(argv[2], newsockfd);           // Send key file contents.
+
+
+  if(n < 0)
+    error("ERROR writing to socket!");
+
+
+  return 0;
+
+}
+
+void sendText(char *file, int newsockfd) {
   // Open plain text file.
   FILE *plaintext;
-  plaintext = fopen(argv[1], "r");
+  plaintext = fopen(file, "r");
+  char buffer[256];
+  char message[1000];
+  int n = 0;
 
   // First send total file length to the server so it knows how many characters to wait for.
   // fseek(plaintext, 0L, SEEK_END);
   char *noNewLine;
-  int totalSize; //= ftell(plaintext);                   // Get total length.
+  int totalSize = 0; //= ftell(plaintext);                   // Get total length.
   while(fgets(buffer, 255, plaintext) != NULL) {
     noNewLine = strtok(buffer, "\n");
     totalSize = totalSize + strlen(noNewLine);
   }
 
-  totalSize = htonl(totalSize);   // COnvert to netbyte order.
+  totalSize = htonl(totalSize);   // Convert to netbyte order.
+  //printf("total size sending a: %d\n", ntohl(totalSize));
 
   fseek(plaintext, 0L, SEEK_SET);                     // Reset location pointer in file to beginning.
 
@@ -104,29 +123,22 @@ int main(int argc, char *argv[]) {
 
     noNewLine = strtok(buffer, "\n");                 // Strip off newline character.
 
-    strcpy(message, noNewLine);                   // starting at index 1. index 0 is a checksum value.
-    msgLen = (int)strlen(message);                 // Get string length of the buffer so server knows how much text to expect.
-    int tmp = htonl(msgLen);// convert to network byte order.
-    printf("tmp: %d\n", ntohl(tmp));        // Debugging message to send.
-    //printf("Message len: %d", (int)strlen(message));
-    n = write(newsockfd, (char*)&tmp, sizeof(tmp));   // Write message to server.
+    strcpy(message, noNewLine);                       // Copy the text into message.
+    msgLen = (int)strlen(message);                    // Get string length of the buffer so server knows how much text to expect.
+    int tmp = htonl(msgLen);                          // convert to network byte order.
+
+    n = write(newsockfd, (char*)&tmp, sizeof(tmp));   // Write message length to server.
     if(n < 0) error("ERROR sending length");
 
-    n = write(newsockfd, message, msgLen);
+    n = write(newsockfd, message, msgLen);            // Write message to server.
     if(n < 0) error("ERROR sedngin message");
-    bzero(message, 1000);                             // Reset message to 0.
+
+    // Reset buffers to 0.
+    bzero(message, 1000);
     bzero(buffer, 256);
   }
 
-  if(n < 0)
-    error("ERROR writing to socket!");
-
-
-  return 0;
-
 }
-
-
 
 void error(const char *msg) {
   perror(msg);

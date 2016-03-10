@@ -9,6 +9,8 @@
 #include <netinet/in.h>       // Required for internet domain access.
 
 void error(const char *msg);  // Error function prototype.
+char* receiveMessage(int newchildsockfd);   // Get messages from client, function prototype.
+char* encrypt(char *plaintext, char *key);
 
 // Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
 int main(int argc, char *argv[]) {
@@ -102,43 +104,31 @@ int main(int argc, char *argv[]) {
       if(newchildsockfd < 0)
         error("ERROR accepting connection from client");
 
-      // First message read is to figure out the total message length that is coming in. (all of the streams).
-      int totalMessLen;       // Hold total message length.
 
-      n = read(newchildsockfd, (char*)&totalMessLen, sizeof(totalMessLen));     // Read total message length.
-      totalMessLen = ntohl(totalMessLen);                                       // Convert to int from netbyte order.
-      printf("Total Message Length: %d\n", totalMessLen);
-      if(n < 0) error("ERROR Reading total message length from client");
 
-      char *entireMessage = (char*) malloc(totalMessLen + 1);                   // Create space to store entire message. (+1 to end with newline).
+      char* plaintext = receiveMessage(newchildsockfd);
+      printf("Back in main: %s\n", plaintext);
 
-      int bufLen;
-      int currPos = 0;
-      // Get all text from client.
-      while(totalMessLen > 0) {
-        // First lets get the total message length that is going to be sent next.
-        n = read(newchildsockfd, (char*)&bufLen, sizeof(bufLen));             // n will always be +1 to the actual string length since buff[0] is length of character string.
-        if(n < 0) error("ERROR reading length");
-
-        bufLen = ntohl(bufLen);           // Convert sent bufLen to normal int.
-        printf("bufLen: %d\n", bufLen);
-
-        // Read actual message.
-        n = read(newchildsockfd, buffer, bufLen);
-        if(n < 0) error("ERROR reading message");
-
-        printf("Buffer: %s\n", buffer);
-        strcpy(&entireMessage[currPos], buffer);
-        currPos = currPos + bufLen;
-        totalMessLen = totalMessLen - bufLen;
-        printf("Remaining: %d\n", totalMessLen);
-        bzero(buffer, 1000);            // Reset buffer to 0.
-      }
-
-      printf("%s\n", entireMessage);
+      char* key = receiveMessage(newchildsockfd);
+      printf("key: %s\n", key);
 
 
       // INSERT CALL TO CRYPT FUNCTION HERE.
+      char* cipher = encrypt(plaintext, key);
+
+
+
+      // Free memory
+      free(plaintext);
+      plaintext = 0;
+
+      free(key);
+      key = 0;
+
+      free(cipher);
+      cipher = 0;
+
+
       exit(0);
     } else {                    // PARENT
       waitpid(0, &status, WNOHANG);
@@ -154,6 +144,65 @@ int main(int argc, char *argv[]) {
 
 }
 
+char* encrypt(char *plaintext, char *key) {
+  int i = 0;
+  char *cipher = (char*) malloc(strlen(plaintext));
+
+  for(i = 0; i < strlen(plaintext); i++) {
+
+    cipher[i] = ((plaintext[i] + key[i]) % 27);         // Encrypt character, using 27 because we are including (space) char.
+    // printf("int: %d\n", cipher[i]);
+    cipher[i] = cipher[i] + 65;
+
+    if(cipher[i] == 91) {                               // When a character is outside the bounds of capitol letters, it is a space char.
+      cipher[i] = 32;
+    }
+
+    //printf("char: %c\n", cipher[i]);
+  }
+  //printf("cipher: %s", cipher);
+  return cipher;
+}
+
+
+char* receiveMessage(int newchildsockfd) {
+  // First message read is to figure out the total message length that is coming in. (all of the streams).
+  int totalMessLen;       // Hold total message length.
+  int n;
+  char buffer[1000];
+
+
+  n = read(newchildsockfd, (char*)&totalMessLen, sizeof(totalMessLen));     // Read total file length.
+  totalMessLen = ntohl(totalMessLen);                                       // Convert to int from netbyte order.
+
+  printf("Total Message Length: %d\n", totalMessLen);
+  if(n < 0) error("ERROR Reading total message length from client");
+
+  char *entireMessage = (char*) malloc(totalMessLen);                   // Create space to store entire message. (+1 to end with newline).
+
+  int bufLen = 0;
+  int currPos = 0;
+
+  // Get all text from client.
+  while(totalMessLen > 0) {
+
+    n = read(newchildsockfd, (char*)&bufLen, sizeof(bufLen));       // First lets get the total message length that is going to be sent next.
+    if(n < 0) error("ERROR reading length");
+
+    bufLen = ntohl(bufLen);                     // Convert sent bufLen to normal int. (type cast happens automatically)
+
+    // Read actual message.
+    n = read(newchildsockfd, buffer, bufLen);
+    if(n < 0) error("ERROR reading message");
+
+    strcpy(&entireMessage[currPos], buffer);
+    currPos = currPos + bufLen;
+    totalMessLen = totalMessLen - bufLen;
+    bzero(buffer, 1000);                        // Reset buffer to 0.
+  }
+
+  return entireMessage;
+}
 
 
 // Returns the passed message to stderr.
