@@ -9,24 +9,38 @@
 #include <netdb.h>
 
 
-// Loop through file to see how big it is.
+/**************************************************
+** Function: fileSize
+** Description: This method determines how many characters
+**  are in a file.
+** Parameters: char file - filename to check
+** Returns: int, number of characters in file.
+**************************************************/
 int fileSize(char *file) {
   FILE *testFile;
-  testFile = fopen(file, "r");
+  testFile = fopen(file, "r");  // Open file.
   int totalSize = 0;
 
   char buffer[256];
   char *noNewLine;
 
+  // Loop through each line in file.
   while(fgets(buffer, 255, testFile) != NULL) {
     noNewLine = strtok(buffer, "\n");
-    totalSize = totalSize + strlen(noNewLine);
+    totalSize = totalSize + strlen(noNewLine);    // Add to total file size counter.
   }
 
-  fclose(testFile);
+  fclose(testFile);             // Close file
   return totalSize;
 }
 
+/**************************************************
+** Function: sendFile
+** Description: This method sends the contents of a file to a socket.
+** Parameters: char file - filename to send.
+**  int newsockfd, socket to send contents to.
+** Returns: nothing
+**************************************************/
 void sendFile(char *file, int newsockfd) {
   // Open plain text file.
   FILE *plaintext;
@@ -36,7 +50,6 @@ void sendFile(char *file, int newsockfd) {
   int n = 0;
 
   // First send total file length to the server so it knows how many characters to wait for.
-  // fseek(plaintext, 0L, SEEK_END);
   char *noNewLine;
   int totalSize = 0; //= ftell(plaintext);                   // Get total length.
   while(fgets(buffer, 255, plaintext) != NULL) {
@@ -45,7 +58,6 @@ void sendFile(char *file, int newsockfd) {
   }
 
   totalSize = htonl(totalSize);   // Convert to netbyte order.
-  //printf("total size sending a: %d\n", ntohl(totalSize));
 
   fseek(plaintext, 0L, SEEK_SET);                     // Reset location pointer in file to beginning.
 
@@ -79,6 +91,13 @@ void sendFile(char *file, int newsockfd) {
 
 }
 
+/**************************************************
+** Function: sendText
+** Description: This method sends text to a socket.
+** Parameters: char text - text to send.
+**  int newsockfd, socket to send text to.
+** Returns: nothing
+**************************************************/
 void sendText(char *text, int newsockfd) {
   char buffer[256];
   char message[1000];
@@ -87,45 +106,38 @@ void sendText(char *text, int newsockfd) {
 
   totalSize = htonl(totalSize);   // Convert to netbyte order.
 
-
   // Send total text size to server.
   n = write(newsockfd, (char*)&totalSize, sizeof(totalSize));     // Send total lenght to server.
   if(n < 0) error("ERROR sending total message size", 1);
-
 
   int completeRec = 0;
   // Send text.
   int msgLen = 0;
   bzero(buffer, 256);
-  //while(fgets(buffer, 255, plaintext) != NULL) {      // Read lines from plaintext file into buffer.
 
-    //noNewLine = strtok(buffer, "\n");                 // Strip off newline character.
+  strcpy(message, text);                            // Copy the text into message.
+  msgLen = (int)strlen(message);                    // Get string length of the buffer so server knows how much text to expect.
+  int tmp = htonl(msgLen);                          // convert to network byte order.
 
-    strcpy(message, text);                       // Copy the text into message.
-    msgLen = (int)strlen(message);                    // Get string length of the buffer so server knows how much text to expect.
-    int tmp = htonl(msgLen);                          // convert to network byte order.
+  n = write(newsockfd, (char*)&tmp, sizeof(tmp));   // Write message length to server.
+  if(n < 0) error("ERROR sending length", 1);
 
-    n = write(newsockfd, (char*)&tmp, sizeof(tmp));   // Write message length to server.
-    if(n < 0) error("ERROR sending length", 1);
-
-    n = write(newsockfd, message, msgLen);            // Write message to server.
-    if(n < 0) error("ERROR sedngin message", 1);
-
-    // Reset buffers to 0.
-    bzero(message, 1000);
-    bzero(buffer, 256);
-  //}
-
+  n = write(newsockfd, message, msgLen);            // Write message to server.
+  if(n < 0) error("ERROR sending message", 1);
 }
 
 
-
+/**************************************************
+** Function: receiveMessage
+** Description: This method receives the contents of a socket message.
+** Parameters: int newchildsockfd, socket to send contents to.
+** Returns: malloc'd message string.
+**************************************************/
 char* receiveMessage(int newchildsockfd) {
   // First message read is to figure out the total message length that is coming in. (all of the streams).
   int totalMessLen;       // Hold total message length.
   int n;
   char buffer[1000];
-
 
   n = read(newchildsockfd, (char*)&totalMessLen, sizeof(totalMessLen));     // Read total file length.
   totalMessLen = ntohl(totalMessLen);                                       // Convert to int from netbyte order.

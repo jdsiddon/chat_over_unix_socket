@@ -106,13 +106,10 @@ int main(int argc, char *argv[]) {
         error("ERROR accepting connection from client", 1);
 
 
-
       char* cipher = receiveMessage(newchildsockfd);
-      // printf("Back in main: %s\n", cipher);
+
 
       char* key = receiveMessage(newchildsockfd);
-      // printf("key: %s\n", key);
-
 
       // INSERT CALL TO decrypt FUNCTION HERE.
       char* plaintext = decrypt(cipher, key);
@@ -137,8 +134,9 @@ int main(int argc, char *argv[]) {
     } else {                    // PARENT
       waitpid(0, &status, WNOHANG);
 
-      printf("Child exit: %d\n", WEXITSTATUS(status));
-      fflush(stdout);
+      // Debugging child process.
+      // printf("Child exit: %d\n", WEXITSTATUS(status));
+      // fflush(stdout);
       close(newsockfd);
     }
   } /* End of while loop */
@@ -148,18 +146,26 @@ int main(int argc, char *argv[]) {
 
 }
 
+
+/**************************************************
+** Function: mod
+** Description: This method converts the letter to the correct value to do decryption on it.
+** Parameters: int a - encrypted character.
+**  int b - key character.
+** Returns: Decrypted character
+**************************************************/
 int mod(int a, int b) {
   if(a == 32) { // a is space
     a = 26;
   } else {
-    a -= 65;
+    a -= 65;      // Convert from char.
   }
 
 
   if(b == 32) {
     b = 26;       // b is space
   } else {
-    b -= 65;
+    b -= 65;      // Convert from char
   }
 
   int sum = a - b;
@@ -169,6 +175,14 @@ int mod(int a, int b) {
   return sum % 27;
 }
 
+/**************************************************
+** Function: decrypt
+** Description: This method accepts a encrypted string and key string and then
+**  decrypts the plaintext with the passed key.
+** Parameters: char cipher - string of text to decrypt.
+**  char key - string of key to encryp with.
+** Returns: malloc'd pointer to decrypted text.
+**************************************************/
 char* decrypt(char *cipher, char *key) {
   int i = 0;
   cipher[strlen(cipher)] = '\0';  // Take off newline.
@@ -177,10 +191,7 @@ char* decrypt(char *cipher, char *key) {
   int cipherKey = 0;
 
   for(i = 0; i < strlen(cipher); i++) {
-
-
     plaintext[i] = mod(cipher[i], key[i]);// Decrypt character, using 27 because we are including (space) char.
-    // printf("int: %d\n", cipher[i]);
     plaintext[i] = plaintext[i] + 65;
 
     if(plaintext[i] == 91) {                   // When a character is outside the bounds of capital letters, it is a space char.
@@ -188,7 +199,6 @@ char* decrypt(char *cipher, char *key) {
     }
 
   }
-  // plaintext[strlen(plaintext)] = '\n';  // set last to newline.
 
   return plaintext;
 }
