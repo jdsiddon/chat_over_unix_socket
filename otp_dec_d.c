@@ -108,10 +108,10 @@ int main(int argc, char *argv[]) {
 
 
       char* cipher = receiveMessage(newchildsockfd);
-      printf("Back in main: %s\n", cipher);
+      // printf("Back in main: %s\n", cipher);
 
       char* key = receiveMessage(newchildsockfd);
-      printf("key: %s\n", key);
+      // printf("key: %s\n", key);
 
 
       // INSERT CALL TO decrypt FUNCTION HERE.
