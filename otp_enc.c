@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   // Connection successful, read port number server sent.
   bzero(buffer, 256);
   n = read(sockfd, buffer, 255);
-  printf("%s", buffer);
+  //printf("%s", buffer);
   close(sockfd);      // Close old connection.
 
   // Create new socket for communication.
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 
   char* cipher = receiveMessage(newsockfd);
 
-  printf("cipher: %s", cipher);
+  printf("%s\n", cipher);
 
   free(cipher);
   cipher = 0;

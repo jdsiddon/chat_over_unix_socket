@@ -112,7 +112,7 @@ char* receiveMessage(int newchildsockfd) {
   n = read(newchildsockfd, (char*)&totalMessLen, sizeof(totalMessLen));     // Read total file length.
   totalMessLen = ntohl(totalMessLen);                                       // Convert to int from netbyte order.
 
-  printf("Total Message Length: %d\n", totalMessLen);
+  // printf("Total Message Length: %d\n", totalMessLen);
   if(n < 0) error("ERROR Reading total message length from client", 1);
 
   char *entireMessage = (char*) malloc(totalMessLen);                   // Create space to store entire message. (+1 to end with newline).

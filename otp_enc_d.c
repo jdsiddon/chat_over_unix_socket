@@ -148,13 +148,39 @@ int main(int argc, char *argv[]) {
 
 }
 
+int mod(int a, int b) {
+  if(a == 32) { // a is space
+    a = 26;
+  } else {
+    a -= 65;
+  }
+
+
+  if(b == 32) {
+    b = 26;       // b is space
+  } else {
+    b -= 65;
+  }
+
+  int sum = a + b;
+  if(sum > 27)
+    return sum - 27;
+
+  return sum % 27;
+}
+
 char* encrypt(char *plaintext, char *key) {
   int i = 0;
+
+  plaintext[strlen(plaintext)] = '\0';  // Take off newline.
+
   char *cipher = (char*) malloc(strlen(plaintext));
+  int plainKey = 0;
 
   for(i = 0; i < strlen(plaintext); i++) {
+    //plainKey = plaintext[i] + key[i];
 
-    cipher[i] = ((plaintext[i] + key[i]) % 27);         // Encrypt character, using 27 because we are including (space) char.
+    cipher[i] = mod(plaintext[i], key[i]);         // Encrypt character, using 27 because we are including (space) char.
     // printf("int: %d\n", cipher[i]);
     cipher[i] = cipher[i] + 65;
 
@@ -164,6 +190,7 @@ char* encrypt(char *plaintext, char *key) {
 
     //printf("char: %c\n", cipher[i]);
   }
+  // cipher[strlen(cipher)] = '\n';  // set last to newline.
   //printf("cipher: %s", cipher);
   return cipher;
 }
