@@ -72,6 +72,8 @@ int main(int argc, char *argv[]) {
 
   // Connection successful, communicate.
   bzero(buffer, 256);
+  if(fileSize(argv[1]) > fileSize(argv[2]))
+    error("ERROR Key not large enough", 1);
 
   // Send plain text data to server.
   sendFile(argv[1], newsockfd);           // Send plain text file contents.

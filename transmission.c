@@ -9,6 +9,24 @@
 #include <netdb.h>
 
 
+// Loop through file to see how big it is.
+int fileSize(char *file) {
+  FILE *testFile;
+  testFile = fopen(file, "r");
+  int totalSize = 0;
+
+  char buffer[256];
+  char *noNewLine;
+
+  while(fgets(buffer, 255, testFile) != NULL) {
+    noNewLine = strtok(buffer, "\n");
+    totalSize = totalSize + strlen(noNewLine);
+  }
+
+  fclose(testFile);
+  return totalSize;
+}
+
 void sendFile(char *file, int newsockfd) {
   // Open plain text file.
   FILE *plaintext;
