@@ -1,3 +1,8 @@
+server: server.c
+	gcc -o server server.c 
 
-otp_enc_d.o:
-	gcc -c otp_enc_d.c
+client: client.c
+	gcc -o client client.c 
+
+clean:
+	rm -r server client

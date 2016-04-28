@@ -1,5 +1,4 @@
-/* A simple server in the internet domain using TCP
-   The port number is passed as an argument */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,9 +10,13 @@
 #include "error.c"
 #include "transmission.c"
 
-char* decrypt(char *cipher, char *key);     // Back out the encryption!
 
-// Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
+/**************************************************
+** Function: Main
+** Description: Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
+** Parameters: command line argument port number to listen on.
+** Returns: 1
+**************************************************/
 int main(int argc, char *argv[]) {
   int sockfd;               // Socket file descriptor.
   int newsockfd;            // Socket file descriptor for use once socket it bound to a port.
@@ -102,39 +105,30 @@ int main(int argc, char *argv[]) {
       listen(childsockfd, 5);            // Listen on socket for connections.
 
       newchildsockfd = accept(childsockfd, (struct sockaddr *) &cli_addr, &clilen);         // Accept connection, make new socket for connection.
-      if(newchildsockfd < 0)
+      if(newchildsockfd < 0) {
         error("ERROR accepting connection from client", 1);
+      }
 
 
-      char* cipher = receiveMessage(newchildsockfd);
+      // char* plaintext = receiveMessage(newchildsockfd);
+      char plaintext[1000];
+      bzero(plaintext, 1000);
 
+      n = read(newchildsockfd, plaintext, 999);
+      printf("Back in main: %s\n", plaintext);
 
-      char* key = receiveMessage(newchildsockfd);
+      n = write(newchildsockfd, plaintext, 999);
 
-      // INSERT CALL TO decrypt FUNCTION HERE.
-      char* plaintext = decrypt(cipher, key);
-
-      // Send plaintext text back to client.
-      sendText(plaintext, newchildsockfd);
-
-
-
-      // Free memory
-      free(plaintext);
-      plaintext = 0;
-
-      free(key);
-      key = 0;
-
-      free(cipher);
-      cipher = 0;
+      if(n < 0) {
+        error("Error sending to client", 1);
+      }
 
 
       exit(0);
     } else {                    // PARENT
       waitpid(0, &status, WNOHANG);
 
-      // Debugging child process.
+      // Debug child errors.
       // printf("Child exit: %d\n", WEXITSTATUS(status));
       // fflush(stdout);
       close(newsockfd);
@@ -149,56 +143,57 @@ int main(int argc, char *argv[]) {
 
 /**************************************************
 ** Function: mod
-** Description: This method converts the letter to the correct value to do decryption on it.
-** Parameters: int a - encrypted character.
+** Description: This method converts the letter to the correct value to do encryption on it.
+** Parameters: int a - plaintext character.
 **  int b - key character.
-** Returns: Decrypted character
+** Returns: Encrypted character
 **************************************************/
-int mod(int a, int b) {
-  if(a == 32) { // a is space
-    a = 26;
-  } else {
-    a -= 65;      // Convert from char.
-  }
+// int mod(int a, int b) {
+//   if(a == 32) {   // a is space
+//     a = 26;
+//   } else {
+//     a -= 65;      // Convert from A-Z to its int equivalent.
+//   }
+//
+//
+//   if(b == 32) {
+//     b = 26;       // b is space
+//   } else {
+//     b -= 65;      // Convert from A-Z to its int equivalent.
+//   }
+//
+//   int sum = a + b;
+//   if(sum > 27)
+//     return sum - 27;
+//
+//   return sum % 27;
+// }
 
-
-  if(b == 32) {
-    b = 26;       // b is space
-  } else {
-    b -= 65;      // Convert from char
-  }
-
-  int sum = a - b;
-  if(sum < 0)
-    return sum + 27;
-
-  return sum % 27;
-}
 
 /**************************************************
-** Function: decrypt
-** Description: This method accepts a encrypted string and key string and then
-**  decrypts the plaintext with the passed key.
-** Parameters: char cipher - string of text to decrypt.
+** Function: encrypt
+** Description: This method accepts a plaintext string and key string and then
+**  encrypts the plaintext with the passed key.
+** Parameters: char plaintext - string of text to encrypt.
 **  char key - string of key to encryp with.
-** Returns: malloc'd pointer to decrypted text.
+** Returns: malloc'd pointer to encrypted text.
 **************************************************/
-char* decrypt(char *cipher, char *key) {
-  int i = 0;
-  cipher[strlen(cipher)] = '\0';  // Take off newline.
-
-  char *plaintext = (char*) malloc(strlen(cipher));
-  int cipherKey = 0;
-
-  for(i = 0; i < strlen(cipher); i++) {
-    plaintext[i] = mod(cipher[i], key[i]);// Decrypt character, using 27 because we are including (space) char.
-    plaintext[i] = plaintext[i] + 65;
-
-    if(plaintext[i] == 91) {                   // When a character is outside the bounds of capital letters, it is a space char.
-      plaintext[i] = 32;
-    }
-
-  }
-
-  return plaintext;
-}
+// char* encrypt(char *plaintext, char *key) {
+//   int i = 0;
+//
+//   plaintext[strlen(plaintext)] = '\0';                // Take off newline.
+//
+//   char *cipher = (char*) malloc(strlen(plaintext));   // Set aside space for cipher.
+//   int plainKey = 0;
+//
+//   for(i = 0; i < strlen(plaintext); i++) {
+//     cipher[i] = mod(plaintext[i], key[i]);         // Encrypt character, using 27 because we are including (space) char.
+//     cipher[i] = cipher[i] + 65;
+//
+//     if(cipher[i] == 91) {                               // When a character is outside the bounds of capitol letters, it is a space char.
+//       cipher[i] = 32;
+//     }
+//   }
+//
+//   return cipher;
+// }
