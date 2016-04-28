@@ -12,18 +12,20 @@
 #include "transmission.c"
 
 
+/**************************************************
+** Function: checkMessage
+** Description: Checks message to see if user wrote quit string.
+**  Provides interface to exapand additional options on interface.
+** Parameters: char buffer - text user typed into console.
+** Returns: 1 if user wants to quit, 0 if they don't want to quit.
+**************************************************/
 int checkMessage(char *buffer) {
   char quitMess[] = "\\quit";
-  char *option;                   // Point
+  char *option;                         // Pointer to message.
 
-  option = strtok(buffer, "\n");
-
-  // printf("optlen: %d, quitLen: %d\n", (int)strlen(option), (int)strlen(quitMess));
-  // printf("%s", buffer);
-  // printf("%d", strcmp(option, quitMess));
+  option = strtok(buffer, "\n");        // Strip newline off to check if it matches '\quit'.
 
   if(strcmp(option, quitMess) == 0) {
-    // printf("%s\n", quitMess);
     return 1;
   }
   return 0;
@@ -112,33 +114,42 @@ int main(int argc, char *argv[]) {
     bzero(buffer, 1000);                                // Clean input buffer.
     prompt(username, buffer);                           // Get user message.
 
-
-    printf("buffer: %s\n", buffer);
     quitProg = checkMessage(buffer);
     if(quitProg == 1) {
       break;
+
+    } else {
+
+      // messLen = strlen(buffer);                           // Get message length.
+      //
+      // if(messLen < 30) {
+      //   printf("Hello");
+      // }
+
+      // n = sendall(newsockfd, buffer, &messLen);           // Send message
+      send(newsockfd, buffer, 1000, 0);
+      if(n < 0) {
+        error("ERROR: sending to server", 1);
+      }
+      bzero(buffer, 1000);
+
+      // response
+      n = recv(newsockfd, buffer, 1000, 0);
+      if(n < 0) {
+        error("ERROR: error reading from server", 1);
+
+      } else if(n == 0) {
+        printf("Server Connection Closed.\n");
+        break;
+
+      }
+
+      printf("%s\n", buffer);
+
     }
 
-    messLen = strlen(buffer);                           // Get message length.
 
-    if(messLen < 30) {
-      printf("Hello");
-    }
 
-    // n = sendall(newsockfd, buffer, &messLen);           // Send message
-    // send(newsockfd, buffer, 1000, 0);
-
-    // if(n < 0) {
-    //   error("ERROR: sending to server", 1);
-    // }
-    // bzero(buffer, 1000);
-
-    // response
-    // n = read(newsockfd, buffer, 1000);
-    // if(n < 0) {
-    //   error("ERROR: error reading from server", 1);
-    // }
-    printf("%s\n", buffer);
   }
 
 

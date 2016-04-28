@@ -124,6 +124,11 @@ int main(int argc, char *argv[]) {
         n = recv(newchildsockfd, buffer, 1000, 0);       // Get message from client.
         if(n < 0) {
           error("ERROR: error reading from server", 1);
+          
+        } else if(n == 0) {
+          printf("Client Connection Closed.\n");
+          break;
+
         }
         printf("%s", buffer);
 
