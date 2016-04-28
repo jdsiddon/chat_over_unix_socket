@@ -12,11 +12,24 @@
 #include "transmission.c"
 
 
-void getMessage(char *username, char *buffer) {
-  printf("%s> ", username);
-  fgets(buffer, 999, stdin);          // Get message.
-  return;
+int checkMessage(char *buffer) {
+  char quitMess[] = "\\quit";
+  char *option;                   // Point
+
+  option = strtok(buffer, "\n");
+
+  // printf("optlen: %d, quitLen: %d\n", (int)strlen(option), (int)strlen(quitMess));
+  // printf("%s", buffer);
+  // printf("%d", strcmp(option, quitMess));
+
+  if(strcmp(option, quitMess) == 0) {
+    // printf("%s\n", quitMess);
+    return 1;
+  }
+  return 0;
 }
+
+
 
 /**
   argv[1] = hostname
@@ -32,9 +45,10 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in serv_addr;   // Address of server.
   struct hostent *server;         // Pointer to host struct type.
 
-  char buffer[1000];       // Buffer to read data into.
-  char message[1000];     // Message to send to server.
+  char buffer[1000];              // Buffer to read data into.
+  char message[1000];             // Message to send to server.
   char username[11];
+
 
   // Check correct command line arguments provided.
   if(argc < 3) {
@@ -90,27 +104,46 @@ int main(int argc, char *argv[]) {
     error("ERROR connecting on new port", 1);
 
 
-  // Connection successful, communicate.
-  bzero(buffer, 1000);
 
-  getMessage(username, buffer);
-  printf("message: %s\n", buffer);
+  int messLen = 0;
+  int quitProg = 0;
+
+  while(1) {
+    bzero(buffer, 1000);                                // Clean input buffer.
+    prompt(username, buffer);                           // Get user message.
 
 
-  n = write(newsockfd, buffer, 1000);
+    printf("buffer: %s\n", buffer);
+    quitProg = checkMessage(buffer);
+    if(quitProg == 1) {
+      break;
+    }
 
-  n = read(newsockfd, buffer, 1000);
+    messLen = strlen(buffer);                           // Get message length.
 
-  if(n < 0) {
-    error("ERROR: error reading from server", 1);
+    if(messLen < 30) {
+      printf("Hello");
+    }
+
+    // n = sendall(newsockfd, buffer, &messLen);           // Send message
+    // send(newsockfd, buffer, 1000, 0);
+
+    // if(n < 0) {
+    //   error("ERROR: sending to server", 1);
+    // }
+    // bzero(buffer, 1000);
+
+    // response
+    // n = read(newsockfd, buffer, 1000);
+    // if(n < 0) {
+    //   error("ERROR: error reading from server", 1);
+    // }
+    printf("%s\n", buffer);
   }
-  printf("Received: %s\n", buffer);
+
+
 
   close(newsockfd);
-
-
-
-
 
   return 0;
 

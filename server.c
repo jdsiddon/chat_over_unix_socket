@@ -11,6 +11,8 @@
 #include "transmission.c"
 
 
+
+
 /**************************************************
 ** Function: Main
 ** Description: Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
@@ -110,17 +112,36 @@ int main(int argc, char *argv[]) {
       }
 
 
-      // char* plaintext = receiveMessage(newchildsockfd);
+
       char plaintext[1000];
       bzero(plaintext, 1000);
 
-      n = read(newchildsockfd, plaintext, 999);
-      printf("Back in main: %s\n", plaintext);
 
-      n = write(newchildsockfd, plaintext, 999);
+      int messLen = 0;
+      int quit = 0;
 
-      if(n < 0) {
-        error("Error sending to client", 1);
+      while(1) {
+        n = recv(newchildsockfd, buffer, 1000, 0);       // Get message from client.
+        if(n < 0) {
+          error("ERROR: error reading from server", 1);
+        }
+        printf("%s", buffer);
+
+        // Write back.
+        bzero(buffer, 1000);
+        prompt("localhost", buffer);
+        // if(quit == 1) {
+        //   break;
+        // }
+        //
+        // messLen = strlen(buffer);
+
+        // n = sendall(newchildsockfd, buffer, &messLen);
+        send(newchildsockfd, buffer, 1000, 0);
+        if(n < 0) {
+          error("ERROR: error sending back to client.", 1);
+        }
+
       }
 
 
@@ -139,61 +160,3 @@ int main(int argc, char *argv[]) {
   return 0;
 
 }
-
-
-/**************************************************
-** Function: mod
-** Description: This method converts the letter to the correct value to do encryption on it.
-** Parameters: int a - plaintext character.
-**  int b - key character.
-** Returns: Encrypted character
-**************************************************/
-// int mod(int a, int b) {
-//   if(a == 32) {   // a is space
-//     a = 26;
-//   } else {
-//     a -= 65;      // Convert from A-Z to its int equivalent.
-//   }
-//
-//
-//   if(b == 32) {
-//     b = 26;       // b is space
-//   } else {
-//     b -= 65;      // Convert from A-Z to its int equivalent.
-//   }
-//
-//   int sum = a + b;
-//   if(sum > 27)
-//     return sum - 27;
-//
-//   return sum % 27;
-// }
-
-
-/**************************************************
-** Function: encrypt
-** Description: This method accepts a plaintext string and key string and then
-**  encrypts the plaintext with the passed key.
-** Parameters: char plaintext - string of text to encrypt.
-**  char key - string of key to encryp with.
-** Returns: malloc'd pointer to encrypted text.
-**************************************************/
-// char* encrypt(char *plaintext, char *key) {
-//   int i = 0;
-//
-//   plaintext[strlen(plaintext)] = '\0';                // Take off newline.
-//
-//   char *cipher = (char*) malloc(strlen(plaintext));   // Set aside space for cipher.
-//   int plainKey = 0;
-//
-//   for(i = 0; i < strlen(plaintext); i++) {
-//     cipher[i] = mod(plaintext[i], key[i]);         // Encrypt character, using 27 because we are including (space) char.
-//     cipher[i] = cipher[i] + 65;
-//
-//     if(cipher[i] == 91) {                               // When a character is outside the bounds of capitol letters, it is a space char.
-//       cipher[i] = 32;
-//     }
-//   }
-//
-//   return cipher;
-// }
