@@ -25,9 +25,6 @@ void prompt(char *username, char *buffer) {
   return;
 }
 
-
-
-
 void packageMess(char *username, char *buffer) {
   char pkgMess[1000];
 

@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
         n = recv(newchildsockfd, buffer, 1000, 0);       // Get message from client.
         if(n < 0) {
           error("ERROR: error reading from server", 1);
-          
+
         } else if(n == 0) {
           printf("Client Connection Closed.\n");
           break;
@@ -141,8 +141,8 @@ int main(int argc, char *argv[]) {
         //
         // messLen = strlen(buffer);
 
-        // n = sendall(newchildsockfd, buffer, &messLen);
-        send(newchildsockfd, buffer, 1000, 0);
+        n = sendall(newchildsockfd, buffer, &messLen);
+        // send(newchildsockfd, buffer, 1000, 0);
         if(n < 0) {
           error("ERROR: error sending back to client.", 1);
         }
