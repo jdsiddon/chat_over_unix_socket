@@ -36,7 +36,24 @@ void packageMess(char *username, char *buffer) {
   return;
 }
 
+/**************************************************
+** Function: checkMessage
+** Description: Checks message to see if user wrote quit string.
+**  Provides interface to exapand additional options on interface.
+** Parameters: char buffer - text user typed into console.
+** Returns: 1 if user wants to quit, 0 if they don't want to quit.
+**************************************************/
+int checkMessage(char *buffer) {
+  char quitMess[] = "\\quit";
+  char *option;                         // Pointer to message.
 
+  option = strtok(buffer, "\n");        // Strip newline off to check if it matches '\quit'.
+
+  if(strcmp(option, quitMess) == 0) {
+    return 1;
+  }
+  return 0;
+}
 
 
 //
@@ -46,13 +63,13 @@ int sendall(int socket, char *buffer, int *length) {
   int left = *length;       // Total number of bytes left to send
 
   while(totalSent < *length) {
-    n = write(socket, buffer+totalSent, left);        // Write to socket, buffer at position left off, number of bytes left to send.
+    n = send(socket, buffer+totalSent, left, 0);        // Write to socket, buffer at position left off, number of bytes left to send.
     if(n < 0) {
       error("ERROR sending!", 1);
     }
 
-    totalSent += n;
-    left -= n;
+    totalSent+=n;
+    left-=n;
   }
 
   *length = totalSent;

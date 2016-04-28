@@ -105,7 +105,8 @@ int main(int argc, char *argv[]) {
       messLen = strlen(buffer);                           // Get message length.
 
       printf("buffer: %s\n", buffer);
-      n = sendall(newsockfd, buffer, &messLen);           // Send message
+      // n = sendall(newsockfd, buffer, &messLen);           // Send message
+      n = send(newsockfd, buffer, 1000, 0);
       if(n < 0) {
         error("ERROR: sending to server", 1);
       }

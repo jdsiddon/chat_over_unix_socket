@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
           break;
 
         }
-        printf("%s", buffer);
+        printf("\n%s\n", buffer);
 
         // Write back.
         bzero(buffer, 1000);
@@ -141,8 +141,8 @@ int main(int argc, char *argv[]) {
         //
         // messLen = strlen(buffer);
 
-        n = sendall(newchildsockfd, buffer, &messLen);
-        // send(newchildsockfd, buffer, 1000, 0);
+        // n = sendall(newchildsockfd, buffer, &messLen);
+        n = send(newchildsockfd, buffer, 1000, 0);
         if(n < 0) {
           error("ERROR: error sending back to client.", 1);
         }
