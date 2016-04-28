@@ -1,14 +1,16 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>       // Required for sockets to work.
+#include <sys/wait.h>
 #include <netinet/in.h>       // Required for internet domain access.
 
 #include "error.c"
-#include "transmission.c"
+// #include "transmission.c"
 
 
 
@@ -111,11 +113,8 @@ int main(int argc, char *argv[]) {
         error("ERROR accepting connection from client", 1);
       }
 
-
-
       char plaintext[1000];
       bzero(plaintext, 1000);
-
 
       int messLen = 0;
       int quit = 0;
@@ -134,10 +133,15 @@ int main(int argc, char *argv[]) {
 
         // Write back.
         bzero(buffer, 1000);
-        prompt("localhost", buffer);
-        // if(quit == 1) {
-        //   break;
-        // }
+        // prompt("localhost", buffer);
+        printf("localhost>");
+        fgets(buffer, 1000, stdin);
+        if(strlen(buffer) > 20) {
+          quit = 1;
+        }
+        if(quit == 1) {
+          break;
+        }
         //
         // messLen = strlen(buffer);
 
@@ -154,9 +158,6 @@ int main(int argc, char *argv[]) {
     } else {                    // PARENT
       waitpid(0, &status, WNOHANG);
 
-      // Debug child errors.
-      // printf("Child exit: %d\n", WEXITSTATUS(status));
-      // fflush(stdout);
       close(newsockfd);
     }
   } /* End of while loop */
