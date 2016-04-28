@@ -49,7 +49,8 @@ int checkMessage(char *buffer) {
 
   option = strtok(buffer, "\n");        // Strip newline off to check if it matches '\quit'.
 
-  if(strcmp(option, quitMess) == 0) {
+  if(strcmp(option, quitMess) == 0) {   // User wants to quit.
+    printf("Closing connection\n");
     return 1;
   }
   return 0;

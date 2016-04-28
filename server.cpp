@@ -136,11 +136,10 @@ int main(int argc, char *argv[]) {
         // prompt("localhost", buffer);
         printf("localhost>");
         fgets(buffer, 1000, stdin);
-        if(strlen(buffer) > 20) {
-          quit = 1;
-        }
+        quit = checkMessage(buffer);
+
         if(quit == 1) {
-          break;
+          exit(0);
         }
         //
         // messLen = strlen(buffer);
