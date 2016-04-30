@@ -19,22 +19,22 @@
 **  int newsockfd, socket to send text to.
 ** Returns: nothing
 **************************************************/
-void prompt(char *username, char *buffer) {
-  printf("%s> ", username);
-  fgets(buffer, 999, stdin);         // Get message.
-  return;
-}
+// void prompt(char *username, char *buffer) {
+//   printf("%s> ", username);
+//   fgets(buffer, 999, stdin);         // Get message.
+//   return;
+// }
 
-void packageMess(char *username, char *buffer) {
-  char pkgMess[1000];
-
-  strcat(pkgMess, username);           // Copy username into the buffer to send.
-  strcat(pkgMess, "> ");
-  strcat(pkgMess, buffer);
-  bzero(buffer, 1000);
-  strcpy(buffer, pkgMess);
-  return;
-}
+// void packageMess(char *username, char *buffer) {
+//   char pkgMess[1000];
+//
+//   strcat(pkgMess, username);           // Copy username into the buffer to send.
+//   strcat(pkgMess, "> ");
+//   strcat(pkgMess, buffer);
+//   bzero(buffer, 1000);
+//   strcpy(buffer, pkgMess);
+//   return;
+// }
 
 /**************************************************
 ** Function: checkMessage
@@ -43,18 +43,18 @@ void packageMess(char *username, char *buffer) {
 ** Parameters: char buffer - text user typed into console.
 ** Returns: 1 if user wants to quit, 0 if they don't want to quit.
 **************************************************/
-int checkMessage(char *buffer) {
-  char quitMess[] = "\\quit";
-  char *option;                         // Pointer to message.
-
-  option = strtok(buffer, "\n");        // Strip newline off to check if it matches '\quit'.
-
-  if(strcmp(option, quitMess) == 0) {   // User wants to quit.
-    printf("Closing connection\n");
-    return 1;
-  }
-  return 0;
-}
+// int checkMessage(char *buffer) {
+//   char quitMess[] = "\\quit";
+//   char *option;                         // Pointer to message.
+//
+//   option = strtok(buffer, "\n");        // Strip newline off to check if it matches '\quit'.
+//
+//   if(strcmp(option, quitMess) == 0) {   // User wants to quit.
+//     printf("Closing connection\n");
+//     return 1;
+//   }
+//   return 0;
+// }
 
 
 //

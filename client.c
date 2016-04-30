@@ -10,6 +10,7 @@
 
 #include "error.c"
 #include "transmission.c"
+#include "message.c"
 
 
 
@@ -104,7 +105,9 @@ int main(int argc, char *argv[]) {
     } else {
       messLen = strlen(buffer);                           // Get message length.
 
-      printf("buffer: %s\n", buffer);
+      // printf("buffer: %s\n", buffer);
+      packageMess(username, buffer);
+
       // n = sendall(newsockfd, buffer, &messLen);           // Send message
       n = send(newsockfd, buffer, 1000, 0);
       if(n < 0) {

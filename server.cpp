@@ -11,6 +11,7 @@
 
 #include "error.c"
 #include "transmission.c"
+#include "message.c"
 
 
 
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
 
   socklen_t clilen;         // Size of clients address, required by 'accept()'.
   char buffer[1000];         // Data buffer to read incoming messages into.
+  char username[] = "localhost";
 
   struct sockaddr_in serv_addr;         // Address of the server (here).
   struct sockaddr_in cli_addr;          // Address of the client (who connects).
@@ -113,8 +115,7 @@ int main(int argc, char *argv[]) {
         error("ERROR accepting connection from client", 1);
       }
 
-      char plaintext[1000];
-      bzero(plaintext, 1000);
+
 
       int messLen = 0;
       int quit = 0;
@@ -129,22 +130,21 @@ int main(int argc, char *argv[]) {
           break;
 
         }
-        printf("\n%s\n", buffer);
+        printf("%s\n", buffer);
 
         // Write back.
         bzero(buffer, 1000);
         // prompt("localhost", buffer);
-        printf("localhost>");
+        printf("%s> ", username);
         fgets(buffer, 1000, stdin);
         quit = checkMessage(buffer);
 
         if(quit == 1) {
           exit(0);
         }
-        //
-        // messLen = strlen(buffer);
 
-        // n = sendall(newchildsockfd, buffer, &messLen);
+        packageMess(username, buffer);    // Package message to send.
+
         n = send(newchildsockfd, buffer, 1000, 0);
         if(n < 0) {
           error("ERROR: error sending back to client.", 1);
