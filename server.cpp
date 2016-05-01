@@ -21,6 +21,7 @@
 int receiveMess(int, char*);
 int sendMess(int, char*, char*);
 
+
 /**************************************************
 ** Function: Main
 ** Description: Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
@@ -54,6 +55,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+
   // Create new socket.
   sockfd = socket(AF_INET, SOCK_STREAM, 0);     // Socket uses unix domain, stream type socket, with TCP protocol.
   if(sockfd < 0)                                // -1 means socket created errored out.
@@ -73,6 +75,7 @@ int main(int argc, char *argv[]) {
     error("ERROR binding", 1);
 
   listen(sockfd, 5);            // Listen on socket for connections.
+
 
   int quit = 0;
 
@@ -125,13 +128,14 @@ int main(int argc, char *argv[]) {
       int messLen = 0;
       int contConn = 1;           // Be default we want to continue receiving message.
 
-
       while(1) {
+        // Receive message.
         contConn = receiveMess(newchildsockfd, buffer);
         if(contConn == 0) {       // Client decided to close connection.
           break;
         }
 
+        // Send message.
         contConn = sendMess(newchildsockfd, buffer, username);
         if(quit == 1) {               // \quit was entered.
           close(newchildsockfd);
@@ -139,27 +143,6 @@ int main(int argc, char *argv[]) {
           kill(pid, SIGKILL);
           return 0;
         }
-
-        // // Write back.
-        // bzero(buffer, 1000);
-        // printf("%s> ", username);
-        // fgets(buffer, 1000, stdin);
-        // quit = checkMessage(buffer);
-        //
-        // // \quit was entered.
-        // if(quit == 1) {
-        //   close(newchildsockfd);
-        //   close(newsockfd);
-        //   kill(pid, SIGKILL);
-        //   return 0;
-        // }
-        //
-        // packageMess(username, buffer);    // Package message to send.
-        //
-        // n = send(newchildsockfd, buffer, 1000, 0);
-        // if(n < 0) {
-        //   error("ERROR: error sending back to client.", 1);
-        // }
 
       }
 
@@ -177,6 +160,13 @@ int main(int argc, char *argv[]) {
 
 
 
+
+/**************************************************
+** Function: receiveMess
+** Description: Receives a message from connected clients.
+** Parameters: int socket - socket identifier, char buff - buffer to store message from client.
+** Returns: 1 if client is still active, 0 if client is no longer active.
+**************************************************/
 int receiveMess(int socket, char* buff) {
   int n = recv(socket, buff, 1000, 0);       // Get message from client.
   if(n < 0) {
@@ -191,7 +181,15 @@ int receiveMess(int socket, char* buff) {
   return 1;
 }
 
-
+/**************************************************
+** Function: sendMess
+** Description: Sends a message to connected clients.
+** Parameters:
+**  int socket - socket identifier,
+**  char buff - buffer to store message from client
+**  char usr - client user name.
+** Returns: 1 if server user still wants to chat, 0 if they entered '\quit'.
+**************************************************/
 int sendMess(int socket, char* buff, char* usr) {
   // Write back.
   bzero(buff, 1000);

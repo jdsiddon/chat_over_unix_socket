@@ -9,10 +9,10 @@ To clean compiled code:
 `make clean`
 
 To start the chatserve (host A) run:  
-`./server [port number]`
+`./chatserve [port number]`
 
 To start the chatclient (host B) run:  
-`./client [host name] [port number]`
+`./chatclient [host name] [port number]`
 
 #### chatclient
 Once the client starts you will be prompted to enter your 'handle'  

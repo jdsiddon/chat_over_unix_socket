@@ -18,6 +18,9 @@
 #include "error.c"
 #include "message.c"
 
+void sendMess(int, char*, char*);
+int receiveMess(int, char*);
+
 
 /**************************************************
 ** Function: Main
@@ -94,9 +97,8 @@ int main(int argc, char *argv[]) {
     error("ERROR connecting on new port", 1);
 
 
-
-  int messLen = 0;
   int quitProg = 0;
+  int contConn = 1;       // Continue connection be default.
 
   while(1) {
     bzero(buffer, 1000);                                // Clean input buffer.
@@ -107,33 +109,62 @@ int main(int argc, char *argv[]) {
       break;
 
     } else {
-      messLen = strlen(buffer);                           // Get message length.
 
-      // printf("buffer: %s\n", buffer);
-      packageMess(username, buffer);
+      sendMess(newsockfd, buffer, username);
 
-      // n = sendall(newsockfd, buffer, &messLen);           // Send message
-      n = send(newsockfd, buffer, 1000, 0);
-      if(n < 0) {
-        error("ERROR: sending to server", 1);
-      }
       bzero(buffer, 1000);
 
-      // response
-      n = recv(newsockfd, buffer, 1000, 0);
-      if(n < 0) {
-        error("ERROR: error reading from server", 1);
-
-      } else if(n == 0) {
-        printf("Server Connection Closed.\n");
+      contConn = receiveMess(newsockfd, buffer);
+      if(contConn == 0) {       // Connection with server dropped.
         break;
-
       }
 
-      printf("%s\n", buffer);   // Print message from server.
     }
   }
 
   close(newsockfd);
   return 0;
+}
+
+
+/**************************************************
+** Function: receiveMess
+** Description: Receives a message from connected server.
+** Parameters: int socket - socket identifier, char buff - buffer to store message from server.
+** Returns: 1 if server is still active, 0 if server is no longer active.
+**************************************************/
+int receiveMess(int socket, char* buff) {
+  // response
+  int n = recv(socket, buff, 1000, 0);
+  if(n < 0) {
+    error("ERROR: error reading from server", 1);
+
+  } else if(n == 0) {
+    printf("Server Connection Closed.\n");
+    return 0;
+
+  }
+
+  printf("%s\n", buff);   // Print message from server.
+  return 1;
+
+}
+
+/**************************************************
+** Function: sendMess
+** Description: Packages a message then sends a message to connected server.
+** Parameters:
+**  int socket - socket identifier,
+**  char buff - buffer to store message from client
+**  char usr - client user name.
+** Returns: Nothing.
+**************************************************/
+void sendMess(int socket, char* buff, char* usr) {
+  packageMess(usr, buff);
+
+  int n = send(socket, buff, 1000, 0);            // Send message
+  if(n < 0) {
+    error("ERROR: sending to server", 1);
+  }
+
 }
