@@ -1,4 +1,8 @@
-
+/**************************************************
+** File: server.cpp
+** Author: Justin Siddon
+** Description: This file provides the server interface to a socket communication system.
+**************************************************/
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -10,10 +14,7 @@
 #include <netinet/in.h>       // Required for internet domain access.
 
 #include "error.c"
-#include "transmission.c"
 #include "message.c"
-
-
 
 
 /**************************************************
@@ -69,6 +70,8 @@ int main(int argc, char *argv[]) {
 
   listen(sockfd, 5);            // Listen on socket for connections.
 
+  int quit = 0;
+
   while(1) {                    // Loop forever waiting for connections.
     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);         // Accept connection, make new socket for connection.
 
@@ -115,10 +118,7 @@ int main(int argc, char *argv[]) {
         error("ERROR accepting connection from client", 1);
       }
 
-
-
       int messLen = 0;
-      int quit = 0;
 
       while(1) {
         n = recv(newchildsockfd, buffer, 1000, 0);       // Get message from client.
@@ -134,13 +134,16 @@ int main(int argc, char *argv[]) {
 
         // Write back.
         bzero(buffer, 1000);
-        // prompt("localhost", buffer);
         printf("%s> ", username);
         fgets(buffer, 1000, stdin);
         quit = checkMessage(buffer);
 
+        // \quit was entered.
         if(quit == 1) {
-          exit(0);
+          close(newchildsockfd);
+          close(newsockfd);
+          kill(pid, SIGKILL);
+          return 0;
         }
 
         packageMess(username, buffer);    // Package message to send.
@@ -152,11 +155,9 @@ int main(int argc, char *argv[]) {
 
       }
 
-
       exit(0);
     } else {                    // PARENT
       waitpid(0, &status, WNOHANG);
-
       close(newsockfd);
     }
   } /* End of while loop */

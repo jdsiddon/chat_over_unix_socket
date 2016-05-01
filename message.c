@@ -1,3 +1,9 @@
+/**************************************************
+** File: message.c
+** Description: This group of functions is used to provide
+**  consistent interface to server and clients.
+**************************************************/
+
 
 /**************************************************
 ** Function: checkMessage
@@ -18,7 +24,14 @@ int checkMessage(char *buffer) {
   return 0;
 }
 
-
+/**************************************************
+** Function: packageMess
+** Description: Creates message of format [username]> [message]
+** Parameters:
+**  char username - user message is from.
+**  char buffer - text user typed into console.
+** Returns: nothing.
+**************************************************/
 void packageMess(char *username, char *buffer) {
   char pkgMess[1000];
 
@@ -32,6 +45,14 @@ void packageMess(char *username, char *buffer) {
   return;
 }
 
+/**************************************************
+** Function: prompt
+** Description: Prompts user for input into passed buffer.
+** Parameters:
+**  char username - user message is from.
+**  char buffer - text user wants to send.
+** Returns: nothing.
+**************************************************/
 void prompt(char *username, char *buffer) {
   printf("%s> ", username);
   fgets(buffer, 999, stdin);         // Get message.

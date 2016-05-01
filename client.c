@@ -1,3 +1,9 @@
+/**************************************************
+** File: server.cpp
+** Author: Justin Siddon
+** Description: This file provides the server interface to a socket communication system.
+**************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,19 +14,17 @@
 // The libraries above are the same for server.
 #include <netdb.h>          // This is different, it defines the structure hostent.
 
+// Custom libraries.
 #include "error.c"
-#include "transmission.c"
 #include "message.c"
 
 
-
-
-
-
-/**
-  argv[1] = hostname
-  argv[2] = portno
-*/
+/**************************************************
+** Function: Main
+** Description: Client style socket configuration.
+** Parameters: command line argument[1] hostname, arg[2] port number to connect.
+** Returns: 1
+**************************************************/
 int main(int argc, char *argv[]) {
   int sockfd;             // Socket file descriptor.
   int newsockfd;          // Socket to use for new connection to server on port assigned by server.
@@ -126,18 +130,10 @@ int main(int argc, char *argv[]) {
 
       }
 
-      printf("%s\n", buffer);
-
+      printf("%s\n", buffer);   // Print message from server.
     }
-
-
-
   }
 
-
-
   close(newsockfd);
-
   return 0;
-
 }
