@@ -17,6 +17,10 @@
 #include "message.c"
 
 
+// Prototypes
+int receiveMess(int, char*);
+int sendMess(int, char*, char*);
+
 /**************************************************
 ** Function: Main
 ** Description: Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
@@ -119,39 +123,43 @@ int main(int argc, char *argv[]) {
       }
 
       int messLen = 0;
+      int contConn = 1;           // Be default we want to continue receiving message.
+
 
       while(1) {
-        n = recv(newchildsockfd, buffer, 1000, 0);       // Get message from client.
-        if(n < 0) {
-          error("ERROR: error reading from server", 1);
-
-        } else if(n == 0) {
-          printf("Client Connection Closed.\n");
+        contConn = receiveMess(newchildsockfd, buffer);
+        if(contConn == 0) {       // Client decided to close connection.
           break;
-
         }
-        printf("%s\n", buffer);
 
-        // Write back.
-        bzero(buffer, 1000);
-        printf("%s> ", username);
-        fgets(buffer, 1000, stdin);
-        quit = checkMessage(buffer);
-
-        // \quit was entered.
-        if(quit == 1) {
+        contConn = sendMess(newchildsockfd, buffer, username);
+        if(quit == 1) {               // \quit was entered.
           close(newchildsockfd);
           close(newsockfd);
           kill(pid, SIGKILL);
           return 0;
         }
 
-        packageMess(username, buffer);    // Package message to send.
-
-        n = send(newchildsockfd, buffer, 1000, 0);
-        if(n < 0) {
-          error("ERROR: error sending back to client.", 1);
-        }
+        // // Write back.
+        // bzero(buffer, 1000);
+        // printf("%s> ", username);
+        // fgets(buffer, 1000, stdin);
+        // quit = checkMessage(buffer);
+        //
+        // // \quit was entered.
+        // if(quit == 1) {
+        //   close(newchildsockfd);
+        //   close(newsockfd);
+        //   kill(pid, SIGKILL);
+        //   return 0;
+        // }
+        //
+        // packageMess(username, buffer);    // Package message to send.
+        //
+        // n = send(newchildsockfd, buffer, 1000, 0);
+        // if(n < 0) {
+        //   error("ERROR: error sending back to client.", 1);
+        // }
 
       }
 
@@ -165,4 +173,43 @@ int main(int argc, char *argv[]) {
   close(sockfd);
   return 0;
 
+}
+
+
+
+int receiveMess(int socket, char* buff) {
+  int n = recv(socket, buff, 1000, 0);       // Get message from client.
+  if(n < 0) {
+    error("ERROR: error reading from server", 1);
+
+  } else if(n == 0) {
+    printf("Client Connection Closed.\n");
+    return 0;
+
+  }
+  printf("%s\n", buff);
+  return 1;
+}
+
+
+int sendMess(int socket, char* buff, char* usr) {
+  // Write back.
+  bzero(buff, 1000);
+  printf("%s> ", usr);
+  fgets(buff, 1000, stdin);
+  int quit = checkMessage(buff);
+
+  // \quit was entered.
+  if(quit == 1) {
+    return 0;
+  }
+
+  packageMess(usr, buff);    // Package message to send.
+
+  int n = send(socket, buff, 1000, 0);
+  if(n < 0) {
+    error("ERROR: error sending back to client.", 1);
+  }
+
+  return 1;
 }

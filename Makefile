@@ -1,8 +1,8 @@
 server: server.cpp
-	g++ server.cpp -o server 
+	g++ server.cpp -o chatserve 
 
 client: client.c
-	gcc -o client client.c 
+	gcc -o chatclient client.c 
 
 clean:
-	rm -r server client
+	rm -r chatserve chatclient
