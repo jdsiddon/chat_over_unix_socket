@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
   // Connection successful, read new port number server sent.
   bzero(buffer, 1000);
   n = read(sockfd, buffer, 999);
-  printf("new port: %s\n", buffer);
+  
   close(sockfd);      // Close old connection.
 
   // Create new socket for communication.
