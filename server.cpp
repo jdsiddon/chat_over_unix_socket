@@ -25,6 +25,7 @@ int sendMess(int, char*, char*);
 /**************************************************
 ** Function: Main
 ** Description: Server style socket configurations based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
+**   and http://beej.us/guide/bgnet/output/html/singlepage/bgnet.html
 ** Parameters: command line argument port number to listen on.
 ** Returns: 1
 **************************************************/

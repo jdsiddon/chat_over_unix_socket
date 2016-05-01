@@ -24,7 +24,8 @@ int receiveMess(int, char*);
 
 /**************************************************
 ** Function: Main
-** Description: Client style socket configuration.
+** Description: Client style socket configuration, based off example at: http://www.linuxhowtos.org/C_C++/socket.htm
+**   and http://beej.us/guide/bgnet/output/html/singlepage/bgnet.html
 ** Parameters: command line argument[1] hostname, arg[2] port number to connect.
 ** Returns: 1
 **************************************************/
