@@ -12,10 +12,15 @@ To compile run:
 To clean compiled code:
 `make clean`
 
-To start the chatserve (host A) run:
+Create two windows under the same ssh session
+In the terminal type `screen`
+Then create a new screen hit `CTRL+A then CTRL+C`
+To switch between screens hit `CTRL+A then CTRL+A`
+
+Start the chatserve (host A) in screen 1 run:
 `./chatserve [port number]`
 
-To start the chatclient (host B) run:
+Start the chatclient (host B) in screen 2 run:
 `./chatclient [host name] [port number]`
 
 USAGE: chatclient
